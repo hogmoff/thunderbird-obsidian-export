@@ -6,6 +6,7 @@ notes.txt
 *.xpi
 *.xcf
 package-lock.json
+.vscode
 
 # JS files are bundled by browserify. See "build_xpi.sh".
 dist
