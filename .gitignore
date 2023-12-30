@@ -1,0 +1,11 @@
+coverage
+node_modules
+test_profile
+images/screenshots
+notes.txt
+*.xpi
+*.xcf
+package-lock.json
+
+# JS files are bundled by browserify. See "build_xpi.sh".
+dist

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <script src="options.js"></script>
+
+  <style>
+    /* https://medium.com/hypersphere-codes/detecting-system-theme-in-javascript-css-react-f6b961916d48 */
+    @media (prefers-color-scheme: light) {
+      body {
+        background: #fff;
+        color: #333;
+      }
+
+      .hovertext:before {
+        background-color: #fff;
+        color: #333;
+      }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #333;
+        color: #fff;
+      }
+
+      .hovertext:before {
+        background-color: #333;
+        color: #fff;
+      }
+    }
+
+    /* Align by using css tables: https://stackoverflow.com/a/23741073/7410886 */
+    fieldset {
+      display: table;
+      border-collapse: separate;
+      border-spacing: 3px 3px;
+    }
+
+    p {
+      display: table-row;
+    }
+
+    label,
+    span,
+    input[type="checkbox"] {
+      display: table-cell;
+    }
+
+    /* https://stackoverflow.com/a/42391523/7410886 */
+    input:not([type="checkbox"]),
+    select,
+    textarea {
+      display: table-cell;
+      width: 100%;
+      /* only relevant for textarea */
+      resize: none;
+    }
+
+    /* Hovertexts for additional help, next to the input fields. */
+    .hovertext {
+      position: relative;
+    }
+
+    .hovertext:before {
+      content: attr(data-hover);
+      visibility: hidden;
+      opacity: 0;
+      width: 200px;
+      border: 1px solid #000;
+      padding-left: 5px;
+      transition: opacity 1s ease-in-out;
+
+      position: absolute;
+      z-index: 1;
+      left: 150%;
+    }
+
+    .hovertext:hover:before {
+      opacity: 1;
+      visibility: visible;
+    }
+  </style>
+</head>
+
+<body>
+
+  <fieldset>
+    <legend>Obsidian Local REST API Configuration</legend>
+    <p>
+      <label for="obsidianScheme">Scheme:</label>
+      <input id="obsidianScheme" type="string" />
+    </p>
+    <p>
+      <label for="obsidianHost">Host:</label>
+      <input id="obsidianHost" type="string" />
+    </p>
+    <p>
+      <label for="obsidianPort">Port:</label>
+      <input id="obsidianPort" type="number" />
+    </p>
+    <p>
+      <label for="obsidianUrl">URL:</label>
+      <input id="obsidianUrl" type="string" disabled />
+      <span class="hovertext" data-hover="Resulting URL from your inputs above.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianToken">Token:</label>
+      <input id="obsidianToken" type="string" />
+      <span class="hovertext" data-hover="Obsidian API token.">
+        <!-- Limit the size of the icon, since it's somehow a bit larger than usual letters. -->
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianStatus">Status:</label>
+      <input id="obsidianStatus" type="string" disabled />
+      <span class="hovertext"
+        data-hover="Press save to refresh. If the status is not 'working', please check the configuration or consult the readme.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Export</legend>
+    <p>
+      <label for="obsidianShowNotifications">Show notifications:</label>
+      <select name="obsidianShowNotifications" id="obsidianShowNotifications">
+        <option value="always">Always</option>
+        <option value="onSuccess">On success</option>
+        <option value="onFailure">On failure</option>
+        <option value="never">Never</option>
+      </select>
+      <span class="hovertext" data-hover="Whether to show a notification after exporting an email.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Properties</legend>
+    <p>
+      <label for="obsidianNoteHeaderTemplate">Note header:</label>
+      <textarea id="obsidianNoteHeaderTemplate" rows="10"></textarea>
+      <span class="hovertext"
+        data-hover="Template for metadata at the top of the note body. Values are obtained from the mail header object. For details, check the github readme.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Note</legend>
+    <p>
+      <label for="obsidianSubjectTrimRegex">Trim subject:</label>
+      <input id="obsidianSubjectTrimRegex" />
+      <span class="hovertext"
+        data-hover="Regex for trimming the subject. Useful for removing Re/Fwd at the start of the subject.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianAuthorTrimRegex">Trim author:</label>
+      <input id="obsidianAuthorTrimRegex" />
+      <span class="hovertext"
+        data-hover="Regex for trimming the author string. Useful for removing the email at the end.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianDateFormat">Date format:</label>
+      <input id="obsidianDateFormat" />
+      <span class="hovertext" data-hover="Date format. Tokens are listed at the Luxon documentation.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianNoteTitleTemplate">Note title:</label>
+      <input id="obsidianNoteTitleTemplate" />
+      <span class="hovertext"
+        data-hover="Template for the note title. Values are obtained from the mail header object. For details, check the github readme.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianNoteFormat">Format:</label>
+      <select name="obsidianNoteFormat" id="obsidianNoteFormat">
+        <option value="text/html">HTML</option>
+        <option value="text/plain">Plaintext</option>
+      </select>
+      <span class="hovertext" data-hover="Preferred format. If not available, fall back to the other format.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianNoteTags">Tags:</label>
+      <input id="obsidianNoteTags" type="string" />
+      <span class="hovertext" data-hover="Custom tags for the Obsidian note.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label></label>
+      <input id="obsidianNoteTagsFromEmail" type="checkbox" />
+      Include Tags from Email
+    </p>
+    <p>
+      <label>Attachments:</label>
+      <select name="obsidianAttachments" id="obsidianAttachments">
+        <option value="attach">Attach All</option>
+        <option value="ignore">Ignore All</option>
+      </select>
+    </p>
+    <p>
+      <label for="obsidianNotePath">Obsidian Note Path:</label>
+      <input id="obsidianNotePath" />
+      <span class="hovertext" data-hover="relative path to save the notes in the vault.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+    <p>
+      <label for="obsidianAttachmentsPath">Obsidian Attachments Path:</label>
+      <input id="obsidianAttachmentsPath" />
+      <span class="hovertext" data-hover="relative path to save the attachments in the vault.">
+        <small>&#9432;</small>
+      </span>
+    </p>
+  </fieldset>
+
+  <p><button type="button" id="btnSave">Save</button></p>
+
+</body>
+
+</html>
