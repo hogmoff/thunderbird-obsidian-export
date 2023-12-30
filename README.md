@@ -18,7 +18,7 @@ Easily export your Thunderbird emails to Obsidian.
 
 - Via [Thunderbird addon store](https://addons.thunderbird.net/en/thunderbird/addon/obsidian-export/) (preferred)
 - Via manual import:
-  1. Download the artifacts from the github build action: <https://github.com/hogmoff/thunderbird-obsidian-export/.github/workflows/build.yml>.
+  1. Download the artifacts from the github build action: <https://github.com/hogmoff/thunderbird-obsidian-export/blob/main/.github/workflows/build.yml>.
   2. Extract the archive and look for "obsidian-export.xpi".
   3. Import to Thunderbird via the addon manager -> "Install Add-on From File...".
 
@@ -27,7 +27,7 @@ Easily export your Thunderbird emails to Obsidian.
 1. Start Obsidian.
 2. Install the [Community Plugin](https://help.obsidian.md/Extending+Obsidian/Community+plugins) [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api), enable the plugin and copy the API key.
 3. Configure the plugin:
-  - set scheme, host and port to the fields.
+  - Set scheme, host and port to the fields.
   - Paste the API token to the token field.
   - Save.
 4. Select any email. The Obsidian button should be at the menu.
@@ -40,7 +40,9 @@ In this section you will find some examples how to include email metadata into n
 
 By default, the note title template is `{{subject}} from {{author}}`. I. e. the `subject` and `author` keys are searched in the mail header object and inserted into the template if found. Since the subject contains often strings like `Re:` or `Fwd:`, these can be removed by defining a regex. The setting is called "Trim subject". For me, the regex `^(((Re|Fw|Fwd):|(\[.*\])) ?)*` works best.
 
-It is also possible to insert some metadata (properties) at the top of the note body. This can be done by defining a template in the "Note header" setting. The template should be specified in markdown syntax for the [properties](https://help.obsidian.md/Editing+and+formatting/Properties). Words surrounded by double curly brackets will be attempted to be replaced by the corresponding metadata, as done in the note title.
+It is also possible to insert some metadata (properties) at the top of the note body. This can be done by defining a template in the "Note header" setting. The template should be specified in markdown syntax for the [properties](https://help.obsidian.md/Editing+and+formatting/Properties) or header. Words surrounded by double curly brackets will be attempted to be replaced by the corresponding metadata, as done in the note title.
+
+The properties {{attachments}} must be always defined in the "Note header", otherwise no Attachments will be linked. If no {{tags}} properties is defined, then it will be attached at the end of the properties. It is prefered to define the {{tags}} properties in the "Note header".
 
 The following two code snippets show examples of what the templates might look like.
 
@@ -52,7 +54,18 @@ From: {{author}}
 Subject: {{subject}}
 Date: {{date}}
 To: {{recipients}}
+Attachments: {{attachments}}
 ---
+```
+
+Same without properties
+
+```
+From: {{author}}
+Subject: {{subject}}
+Date: {{date}}
+To: {{recipients}}
+Attachments: {{attachments}}
 ```
 
 ```
@@ -60,12 +73,13 @@ To: {{recipients}}
 Table with closing separation line:
 
 ```text
-|         |                |
-| ------- | -------------- |
-| From    | {{author}}     |
-| Subject | {{subject}}    |
-| Date    | {{date}}       |
-| To      | {{recipients}} |
+|             |                 |
+| ----------- | ----------------|
+| From        | {{author}}      |
+| Subject     | {{subject}}     |
+| Date        | {{date}}        |
+| To          | {{recipients}}  |
+| Attachments | {{attachments}} |
 
 ---
 
@@ -89,8 +103,9 @@ What to do when the export failed?
 - <https://webextension-api.thunderbird.net/en/latest/>
 - <https://developer.thunderbird.net/add-ons/resources>
 
+
 ## Changelog
 
-### 0.1
+### 0.0.1
 
 - Initial release.

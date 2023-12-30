@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { sendEmailToApi, sendFileToApi, toDateString, getSetting } from "./common";
+import { sendEmailToApi, sendFileToApi, toDateString, getSetting, checkObsidianConnection } from "./common";
 
 declare const browser: any;
 declare const messenger: any;
@@ -112,12 +112,15 @@ async function getAndProcessMessages(tab: { id: number }, info: any) {
           ? "Exported one email."
           : `Exported ${results.length} emails.`;
     } else {
-      notificationMessage = "Please check the developer console.";
+      notificationMessage = "Please check Obsidian and the developer console.";
     }
   }
 
   // Emit the notification if configured.
   const showNotifications = await getSetting("obsidianShowNotifications");
+  console.log(showNotifications);
+  console.log(success);
+  console.log(notificationMessage);
   if (
     (success && ["always", "onSuccess"].includes(showNotifications)) ||
     (!success && ["always", "onFailure"].includes(showNotifications))
@@ -146,6 +149,7 @@ async function processMail(mailHeader: any) {
   const regexStringSubject = (await getSetting("obsidianSubjectTrimRegex")) || "";
   const regexStringAuthor = (await getSetting("obsidianAuthorTrimRegex")) || "";
   const dateFormat = (await getSetting("obsidianDateFormat")) || "";
+  const obsidianDateStr = toDateString(new Date());
   const trimmedSubject =
     regexStringSubject === ""
       ? mailHeader.subject
@@ -163,9 +167,11 @@ async function processMail(mailHeader: any) {
     subject: trimmedSubject,
     author: trimmedAuthor,
     date: formattedDate,
+    created: obsidianDateStr,
+    updated: obsidianDateStr,
+    related: "",
   };
   const obsidianAttachmentsPath = (await getSetting("obsidianAttachmentsPath")) || "";
-  const obsidianDateStr = toDateString(new Date());
 
   // Title
   const titleRendered = renderString(
@@ -269,53 +275,48 @@ async function processMail(mailHeader: any) {
   // Note Name
   const noteName = titleRendered;
 
-  // Add user defined header info.
   const renderTemplate = (await getSetting("obsidianNoteHeaderTemplate")) || "";
-  var properties = renderTemplate;
-  if (renderTemplate) {
-    properties = properties.replace("{{created}}", obsidianDateStr);
-    properties = properties.replace("{{updated}}", obsidianDateStr);
-    properties = properties.replace("{{related}}", "");
-    properties = properties.replace("{{author}}", trimmedAuthor.replace(":", "").replace(/"/g, ""));
-    properties = properties.replace("{{subject}}", trimmedSubject.replace(":", "").replace(/"/g, ""));
-    properties = properties.replace("{{date}}", toDateString(mailHeader.date));
-    if (fileList.length > 0) {
-      var attach = "\n";
-      for (let file of fileList) {
-        attach += "  - \"[[" + file + "|" + file.replace(filePrefix, '') + "]]\"\n";
-      }
-      properties = properties.replace("{{attachments}}", attach.trimEnd());
-    }
-    else {
-      properties = properties.replace("{{attachments}}", "");
-    }
-  }
 
   // add Tags to header
-  var propertiesWithTags = properties;
+  var propertiesWithTags = renderTemplate;
   if (tags.length > 0) {
     // add Header
     var tagsString = "";
-    if (propertiesWithTags.length == 0) {
-      propertiesWithTags = "---\ntags: \n---\n";
+    if (propertiesWithTags.indexOf("---") < 0) {
+      propertiesWithTags = "---\ntags: {{tags}}\n---\n" + propertiesWithTags;
     }
     var indexTags = propertiesWithTags.indexOf("{{tags}}");
     var indexEnd = propertiesWithTags.lastIndexOf("---");
     for (let tag of tags) {
       tagsString += "  - " + tag + "\n";
     }
-    tagsString.trimEnd();
+    tagsString = tagsString.trimEnd();
 
     // insert tags
     if (indexTags < 0 && indexEnd >= 0) {
       // to the end
-      propertiesWithTags = propertiesWithTags.substring(0, indexEnd) + "tags: \n" + tagsString + propertiesWithTags.substring(indexEnd);
+      propertiesWithTags = propertiesWithTags.substring(0, indexEnd) + "tags: \n" + tagsString + "\n" + propertiesWithTags.substring(indexEnd);
     }
     else if (indexTags >= 0) {
       // to the keyword {{tags}} 
       propertiesWithTags = propertiesWithTags.replace("{{tags}}", "\n" + tagsString);
     }
+  }
 
+  // Add user defined header info.  
+  var header = renderString(propertiesWithTags, renderingContext);
+
+  // Add attachments
+  const obsidianAttachments = (await getSetting("obsidianAttachments")) || "";
+  if (obsidianAttachments == "attach" && fileList.length > 0) {
+    var attach = "\n";
+    for (let file of fileList) {
+      attach += "  - \"[[" + file + "|" + file.replace(filePrefix, '') + "]]\"\n";
+    }
+    header = header.replace("{{attachments}}", attach.trimEnd());
+  }
+  else {
+    header = header.replace("{{attachments}}", "");
   }
 
   var body = "";
@@ -328,13 +329,18 @@ async function processMail(mailHeader: any) {
     body = data["body"];
   }
 
+  // first check API
+  let resultConn = await checkObsidianConnection();
+  if (!resultConn.working) {
+    return resultConn.message;
+  }
+
   // send note to Obsidian
   // https://javascript.info/fetch
-  let response = await sendEmailToApi(noteName, propertiesWithTags + body);
+  let response = await sendEmailToApi(noteName, header + body);
   if (!response.ok) {
     return `Failed to create note: ${await response.text()}`;
   }
-  let noteInfo = await response.json();
 
   return null;
 }

@@ -13,8 +13,25 @@ export function toDateString(d: Date) {
   return datestring;
 }
 
+// Check Connection to Obsidian
+export async function checkObsidianConnection() {
+
+  let response;
+  try {
+    response = await checkApi();
+  } catch (e) {
+    return {
+      working: false,
+      message:
+        "Pinging Obsidian failed. Please check that Obsidian is running and the LOCAL Rest API is enabled.",
+    };
+  }
+
+  return { working: true, message: "" };
+}
+
 // Check API to Obsidian
-export async function checkApi() {
+async function checkApi() {
   const { obsidianScheme, obsidianHost, obsidianPort } =
     await browser.storage.local.get([
       "obsidianScheme",

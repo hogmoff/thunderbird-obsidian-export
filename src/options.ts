@@ -1,4 +1,4 @@
-import { checkApi, getSetting } from "./common";
+import { checkObsidianConnection, getSetting } from "./common";
 
 declare const browser: any;
 declare const btnSave: HTMLButtonElement;
@@ -14,8 +14,7 @@ const default_map: { [key: string]: string | number | boolean } = {
   obsidianAuthorTrimRegex: "",
   obsidianDateFormat: "D T",
   obsidianNoteTitleTemplate: "{{subject}} from {{author}}",
-  obsidianNoteHeaderTemplate: "---\ncreated: {{created}}\nupdated: {{updated}}\nrelated: {{related}}\nauthor: {{author}}\nsubject: {{subject}}\n" +
-    "date: {{date}}\ntags: {{tags}}\nattachments: {{attachments}}\n---\n\n",
+  obsidianNoteHeaderTemplate: "---\nFrom: {{author}}\nSubject: {{subject}}\nDate: {{date}}\nTo: {{recipients}}\nAttachments: {{attachments}}\n---\n",
   obsidianNoteFormat: "text/plain",
   obsidianAttachments: "attach",
   obsidianNoteTags: "email",
@@ -23,22 +22,6 @@ const default_map: { [key: string]: string | number | boolean } = {
   obsidianNotePath: "mails/",
   obsidianAttachmentsPath: "attachments/",
 };
-
-async function checkObsidianConnection() {
-
-  let response;
-  try {
-    response = await checkApi();
-  } catch (e) {
-    return {
-      working: false,
-      message:
-        "Pinging Obsidian failed. Please check that Obsidian is running and the LOCAL Rest API is enabled.",
-    };
-  }
-
-  return { working: true, message: "" };
-}
 
 async function updateConnectionStatus() {
   const connectionStatus = document.getElementById(
